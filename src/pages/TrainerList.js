@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  getAllTrainers,
   deleteTrainer,
   getTrainerById,
   getTrainersBySubject,
@@ -11,39 +10,17 @@ import {
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import "../styles/TrainerList.css";
 
-function TrainerList() {
-  const [trainers, setTrainers] = useState([]);
+function TrainerList({ trainers, refreshTrainers }) {
+  const [filteredTrainers, setFilteredTrainers] = useState(trainers);
   const [query, setQuery] = useState("");
   const [searchType, setSearchType] = useState("name");
-
-  useEffect(() => {
-    loadTrainers();
-  }, []);
-
-  const loadTrainers = () => {
-    getAllTrainers().then(async (res) => {
-      const list = res.data || [];
-      const updated = await Promise.all(
-        list.map(async (t) => {
-          try {
-            const s = await getSubjectsByTrainer(t.empId);
-            t.subjects = s.data || [];
-          } catch {
-            t.subjects = [];
-          }
-          return t;
-        })
-      );
-      setTrainers(updated);
-    });
-  };
 
   const handleSearch = () => {
     if (!query) return alert("Enter search value");
 
     if (searchType === "name") {
-      setTrainers((prev) =>
-        prev.filter((t) =>
+      setFilteredTrainers(
+        trainers.filter((t) =>
           t.name.toLowerCase().includes(query.toLowerCase())
         )
       );
@@ -55,7 +32,7 @@ function TrainerList() {
           const t = res.data;
           const s = await getSubjectsByTrainer(t.empId);
           t.subjects = s.data || [];
-          setTrainers([t]);
+          setFilteredTrainers([t]);
         })
         .catch(() => alert("Trainer not found"));
     }
@@ -71,7 +48,7 @@ function TrainerList() {
               return t;
             })
           );
-          setTrainers(updated);
+          setFilteredTrainers(updated);
         })
         .catch(() => alert("No trainers found"));
     }
@@ -81,7 +58,7 @@ function TrainerList() {
     if (window.confirm("Delete this trainer?")) {
       deleteTrainer(id).then(() => {
         alert("Trainer deleted");
-        loadTrainers();
+        refreshTrainers();
       });
     }
   };
@@ -118,7 +95,7 @@ function TrainerList() {
         />
 
         <button onClick={handleSearch}>Search</button>
-        <button className="reset" onClick={loadTrainers}>
+        <button className="reset" onClick={() => setFilteredTrainers(trainers)}>
           Reset
         </button>
       </div>

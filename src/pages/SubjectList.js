@@ -1,47 +1,38 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { getAllSubjects, getSubjectById, deleteSubject } from "../services/subjectService";
+import { getSubjectById, deleteSubject } from "../services/subjectService";
+import { useData } from "../context/DataContext";
 import "../styles/subject.css";
 
 function SubjectList() {
-  const [subjects, setSubjects] = useState([]);
+  const { subjects, refreshSubjects } = useData();
   const [idSearch, setIdSearch] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [trainers, setTrainers] = useState([]);
   const [viewMode, setViewMode] = useState("all");
 
-  useEffect(() => {
-    getAllSubjects().then(res => setSubjects(res.data));
-  }, []);
+  const showSubjectDetail = (subject, trainersData) => {
+    setSelectedSubject(subject);
+    setTrainers(trainersData);
+    setViewMode("detail");
+  };
 
   const handleSearchById = () => {
     if (!idSearch) return alert("Enter subject ID");
     getSubjectById(idSearch)
-      .then(res => {
-        setSelectedSubject(res.data.subject);
-        setTrainers(res.data.trainers);
-        setViewMode("detail");
-      })
+      .then(res => showSubjectDetail(res.data.subject, res.data.trainers))
       .catch(() => alert("Subject not found"));
   };
 
   const openSubject = (id) => {
-    getSubjectById(id).then(res => {
-      setSelectedSubject(res.data.subject);
-      setTrainers(res.data.trainers);
-      setViewMode("detail");
-    });
+    getSubjectById(id).then(res => showSubjectDetail(res.data.subject, res.data.trainers));
   };
 
-
   const handleDelete = (id, e) => {
-    e.stopPropagation(); // Prevent triggering the card click
+    e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this subject?")) {
-      deleteSubject(id).then(() => {
-        setSubjects(subjects.filter(s => s.subjectId !== id));
-      }).catch(() => alert("Failed to delete subject"));
+      deleteSubject(id).then(() => refreshSubjects()).catch(() => alert("Failed to delete subject"));
     }
-    
   };
 
   return (

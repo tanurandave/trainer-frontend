@@ -1,12 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { addTrainer } from "../services/trainerService";
-import { getAllSubjects } from "../services/subjectService";
-import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 
-function AddTrainer() {
+function AddTrainer({ subjects, refreshTrainers }) {
   const navigate = useNavigate();
-  const [subjects, setSubjects] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
 
   const [trainer, setTrainer] = useState({
@@ -17,12 +14,6 @@ function AddTrainer() {
     format: "",
     mobileNumber: ""
   });
-
-  useEffect(() => {
-    getAllSubjects()
-      .then(res => setSubjects(res.data))
-      .catch(err => console.error("Error loading subjects:", err));
-  }, []);
 
   const handleChange = (e) => {
     setTrainer({ ...trainer, [e.target.name]: e.target.value });
@@ -61,6 +52,7 @@ function AddTrainer() {
     addTrainer(trainer, selectedSubjects)
       .then(() => {
         alert("Trainer added successfully with interested subjects ✅");
+        refreshTrainers();
         navigate("/");
       })
       .catch(err => {

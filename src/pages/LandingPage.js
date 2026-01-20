@@ -50,10 +50,10 @@ const LandingPage = () => {
         <div className="card">
           <h3>Quick Actions</h3>
           <div className="action-grid">
-            <button onClick={() => navigate("/add-trainer")}>➕ Add Trainer</button>
-            <button onClick={() => navigate("/add-subject")}>📘 Add Subject</button>
-            <button onClick={() => navigate("/assign-trainer")}>🔗 Assign Trainer</button>
-            <button className="secondary">📄 Export Report</button>
+            <button onClick={() => navigate("/add-trainer")}>➕ Add Trainers</button>
+            <button onClick={() => navigate("/add-subject")}>📘 Add Subjects</button>
+            <button onClick={() => navigate("/assign-trainer")}>🔗 Assign Trainers</button>
+            <button className="secondary">📄 Export Reports</button>
           </div>
         </div>
 

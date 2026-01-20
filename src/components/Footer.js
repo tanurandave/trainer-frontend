@@ -18,7 +18,7 @@ function Footer() {
           <div className="footer-grid">
             {/* Brand Column */}
             <div className="footer-column">
-              <h4 className="footer-brand">TrainerApp</h4>
+              <h4 className="footer-brand">TrainerHub</h4>
               <p className="footer-description">
                 The modern platform for managing trainers and subjects efficiently.
               </p>

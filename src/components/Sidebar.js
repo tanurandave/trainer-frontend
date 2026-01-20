@@ -24,7 +24,7 @@ function Sidebar() {
            <span>Subjects</span>
         </NavLink>
       <NavLink to="/add-subject" className="menu-item">
-           <span>Add Subject</span>
+           <span>Add Subjects</span>
         </NavLink>
 
         <NavLink to="/assign" className="menu-item">

@@ -15,3 +15,7 @@ export const addSubject = (subject) => {
 export const deleteSubject = (id) => {
   return api.delete(`/subject/${id}`);
 };
+
+export const getTopicsForSubject = (id) => {
+  return api.get(`/subject/${id}/topics`);
+};

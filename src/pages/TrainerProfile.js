@@ -35,11 +35,11 @@ function TrainerProfile() {
     <div className="trainer-profile-page">
       {/* HEADER */}
       <div className="tp-header">
-        <img
+        {/* <img
           src={`https://i.pravatar.cc/150?u=${trainer.empId}`}
           alt="Trainer"
           className="tp-avatar"
-        />
+        /> */}
 
         <div className="tp-header-info">
           <h2>{trainer.name}</h2>

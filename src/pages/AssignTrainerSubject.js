@@ -1,232 +1,123 @@
 import { useEffect, useState } from "react";
-import { getAllTrainers } from "../services/trainerService";
-import { getAllSubjects } from "../services/subjectService";
 import api from "../services/api";
-import { addTopic } from "../services/topicService";
+import AddTopicModal from "./../components/AddTopicModal";
 
-function AssignTrainerSubject() {
-  const [trainers, setTrainers] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+function AssignTrainerSubject({ trainers, subjects }) {
   const [assignments, setAssignments] = useState([]);
-  const [data, setData] = useState({
-    empId: "",
-    subjectId: ""
-  });
-  const [topicData, setTopicData] = useState({
-    topicName: "",
-    description: ""
-  });
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const [showAddTopic, setShowAddTopic] = useState(false);
+  const [form, setForm] = useState({ empId: "", subjectId: "" });
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    getAllTrainers().then(res => setTrainers(res.data));
-    getAllSubjects().then(res => setSubjects(res.data));
     loadAssignments();
   }, []);
 
   const loadAssignments = () => {
-    api.get("/trainer-subject")
-      .then(res => {
-        console.log("Assignments loaded:", res.data);
-        setAssignments(res.data);
-      })
-      .catch(err => {
-        console.error("Error loading assignments", err);
-        alert("Error loading assignments. Check console for details.");
-      });
+    api.get("/trainer-subject").then(res => setAssignments(res.data));
   };
 
-  const handleAssign = () => {
-    if (!data.empId || !data.subjectId) {
-      alert("Please select trainer and subject");
-      return;
-    }
-
+  const assignTrainer = () => {
     api.post("/trainer-subject/assign", {
-      empId: parseInt(data.empId),
-      subjectId: parseInt(data.subjectId)
-    })
-      .then((response) => {
-        console.log("Assignment response:", response);
-        alert("Trainer assigned successfully ✅");
-        setData({ empId: "", subjectId: "" });
-        loadAssignments();
-      })
-      .catch((error) => {
-        console.error("Assignment error:", error);
-        console.error("Error response:", error.response);
-        alert(`Error: ${error.response?.data || error.message}`);
-      });
+      empId: Number(form.empId),
+      subjectId: Number(form.subjectId)
+    }).then(() => {
+      setForm({ empId: "", subjectId: "" });
+      loadAssignments();
+    });
   };
 
-  const handleDelete = (empId, subjectId) => {
-    if (window.confirm("Are you sure you want to remove this assignment?")) {
-      // Log the values being sent
-      console.log("Deleting assignment with empId:", empId, "subjectId:", subjectId);
-      
-      api.delete(`/trainer-subject/${empId}/${subjectId}`)
-        .then((response) => {
-          console.log("Delete response:", response);
-          alert("Assignment removed ✅");
-          loadAssignments();
-        })
-        .catch((error) => {
-          console.error("Delete error:", error);
-          console.error("Error response:", error.response);
-          alert(`Error removing assignment: ${error.response?.data || error.message}`);
-        });
-    }
-  };
-
-  const getTrainerName = (empId) => {
-    const trainer = trainers.find(t => t.empId === empId);
-    return trainer ? trainer.name : "Unknown";
-  };
-
-  const getSubjectName = (subjectId) => {
-    const subject = subjects.find(s => s.subjectId === subjectId);
-    return subject ? subject.subjectName : "Unknown";
-  };
-
-  const handleAddTopic = (assignment) => {
-    setSelectedAssignment(assignment);
-    setShowAddTopic(true);
-  };
-
-  const handleTopicSubmit = () => {
-    if (!topicData.topicName.trim()) {
-      alert("Topic name is required");
-      return;
-    }
-
-    addTopic(topicData)
-      .then((response) => {
-        const topicId = response.data.topicId;
-        api.post(`/subject/${selectedAssignment.subjectId}/topics/${topicId}`)
-          .then(() => {
-            alert("Topic added to subject successfully");
-            setTopicData({ topicName: "", description: "" });
-            setShowAddTopic(false);
-            setSelectedAssignment(null);
-          })
-          .catch((error) => {
-            alert(`Error assigning topic: ${error.response?.data || error.message}`);
-          });
-      })
-      .catch((error) => {
-        alert(`Error adding topic: ${error.response?.data || error.message}`);
-      });
+  const removeAssignment = (empId, subjectId) => {
+    api.delete(`/trainer-subject/${empId}/${subjectId}`)
+      .then(loadAssignments);
   };
 
   return (
-    <div className="container mt-4">
-      <h3>Assign Trainer to Subject</h3>
+    <div className="p-6 max-w-6xl mx-auto">
+      
+      <h1 className="text-2xl font-bold text-blue-700 mb-6">
+        Trainer – Subject Assignment
+      </h1>
 
-      <div className="card p-4 mb-4">
-        <select
-          className="form-control mb-3"
-          value={data.empId}
-          onChange={e => setData({ ...data, empId: e.target.value })}
-        >
-          <option value="">Select Trainer</option>
-          {trainers.map(t => (
-            <option key={t.empId} value={t.empId}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+      {/* Assign Card */}
+      <div className="bg-white p-5 rounded-xl shadow mb-8">
+        <div className="grid grid-cols-3 gap-4">
+          <select
+            className="border p-2 rounded"
+            value={form.empId}
+            onChange={e => setForm({ ...form, empId: e.target.value })}
+          >
+            <option value="">Select Trainer</option>
+            {trainers.map(t => (
+              <option key={t.empId} value={t.empId}>{t.name}</option>
+            ))}
+          </select>
 
-        <select
-          className="form-control mb-3"
-          value={data.subjectId}
-          onChange={e => setData({ ...data, subjectId: e.target.value })}
-        >
-          <option value="">Select Subject</option>
-          {subjects.map(s => (
-            <option key={s.subjectId} value={s.subjectId}>
-              {s.subjectName}
-            </option>
-          ))}
-        </select>
+          <select
+            className="border p-2 rounded"
+            value={form.subjectId}
+            onChange={e => setForm({ ...form, subjectId: e.target.value })}
+          >
+            <option value="">Select Subject</option>
+            {subjects.map(s => (
+              <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>
+            ))}
+          </select>
 
-        <button className="btn btn-success" onClick={handleAssign}>
-          Assign Trainer to Subject
-        </button>
+          <button
+            onClick={assignTrainer}
+            className="bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Assign
+          </button>
+        </div>
       </div>
 
-      <h4 className="mt-5">Assigned Trainers - Subjects</h4>
-
-      <table className="table table-bordered table-striped">
-        <thead className="table-dark">
-          <tr>
-            <th>Trainer Name</th>
-            <th>Subject</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assignments.length === 0 ? (
+      {/* Assignment Table */}
+      <div className="bg-white rounded-xl shadow">
+        <table className="w-full">
+          <thead className="bg-blue-50">
             <tr>
-              <td colSpan="3" className="text-center">
-                No assignments yet
-              </td>
+              <th className="p-3 text-left">Trainer</th>
+              <th className="p-3">Subject</th>
+              <th className="p-3 text-right">Actions</th>
             </tr>
-          ) : (
-            assignments.map((assignment, index) => (
-              <tr key={index}>
-                <td>{getTrainerName(assignment.empId)}</td>
-                <td>{getSubjectName(assignment.subjectId)}</td>
-                <td>
+          </thead>
+          <tbody>
+            {assignments.map((a, i) => (
+              <tr key={i} className="border-t">
+                <td className="p-3">
+                  {trainers.find(t => t.empId === a.empId)?.name}
+                </td>
+                <td className="p-3 text-center">
+                  <span className="px-3 py-1 bg-blue-100 rounded-full">
+                    {subjects.find(s => s.subjectId === a.subjectId)?.subjectName}
+                  </span>
+                </td>
+                <td className="p-3 text-right space-x-2">
                   <button
-                    className="btn btn-primary btn-sm me-2"
-                    onClick={() => handleAddTopic(assignment)}
+                    onClick={() => setSelected(a)}
+                    className="text-blue-600 hover:underline"
                   >
-                    Add Topic
+                    + Topic
                   </button>
                   <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(assignment.empId, assignment.subjectId)}
+                    onClick={() => removeAssignment(a.empId, a.subjectId)}
+                    className="text-red-500 hover:underline"
                   >
                     Remove
                   </button>
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {showAddTopic && (
-        <div className="modal show d-block" tabIndex="-1">
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Add Topic to {getSubjectName(selectedAssignment.subjectId)}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowAddTopic(false)}></button>
-              </div>
-              <div className="modal-body">
-                <input
-                  type="text"
-                  className="form-control mb-3"
-                  placeholder="Topic Name"
-                  value={topicData.topicName}
-                  onChange={(e) => setTopicData({ ...topicData, topicName: e.target.value })}
-                />
-                <textarea
-                  className="form-control"
-                  placeholder="Description"
-                  value={topicData.description}
-                  onChange={(e) => setTopicData({ ...topicData, description: e.target.value })}
-                ></textarea>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowAddTopic(false)}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={handleTopicSubmit}>Add Topic</button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {selected && (
+        <AddTopicModal
+          subject={subjects.find(s => s.subjectId === selected.subjectId)?.subjectName}
+          subjectId={selected.subjectId}
+          onClose={() => setSelected(null)}
+        />
       )}
     </div>
   );
