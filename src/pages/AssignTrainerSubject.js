@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import AddTopicModal from "./../components/AddTopicModal";
+import AssignTopicToTrainer from "../components/AssignTopicToTrainer";
 
 function AssignTrainerSubject({ trainers, subjects }) {
   const [assignments, setAssignments] = useState([]);
@@ -32,7 +33,7 @@ function AssignTrainerSubject({ trainers, subjects }) {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      
+
       <h1 className="text-2xl font-bold text-blue-700 mb-6">
         Trainer – Subject Assignment
       </h1>
@@ -119,8 +120,9 @@ function AssignTrainerSubject({ trainers, subjects }) {
           onClose={() => setSelected(null)}
         />
       )}
-    </div>
-  );
+
+      <AssignTopicToTrainer trainers={trainers} subjects={subjects} />
+    </div>);
 }
 
 export default AssignTrainerSubject;
