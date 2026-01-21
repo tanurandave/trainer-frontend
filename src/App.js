@@ -32,6 +32,9 @@ function AppContent() {
           <Route path="/trainer/:id" element={<TrainerProfile />} />
           <Route path="/subjects" element={<SubjectList subjects={subjects} refreshSubjects={refreshSubjects} />} />
           <Route path="/subjects/:id" element={<SubjectDetails subjects={subjects} />} />
+       
+          <Route path="/subject/:id" element={<SubjectDetails />} />
+
           <Route path="/add-subject" element={<AddSubject />} />
           <Route path="/settings" element={<Preferences />} />
         </Route>
