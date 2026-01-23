@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getSubjectById } from "../services/subjectService";
-import api from "../services/api";
 import "../styles/subject.css";
 
 function SubjectDetails() {
@@ -14,7 +13,7 @@ function SubjectDetails() {
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* ---------------- LOAD SUBJECT + TOPICS + TRAINERS ---------------- */
+  /* ---------------- LOAD SUBJECT DETAILS ---------------- */
   const loadSubjectDetails = async () => {
     try {
       const res = await getSubjectById(id);
@@ -28,15 +27,11 @@ function SubjectDetails() {
     }
   };
 
-  /* ---------------- EFFECT ---------------- */
   useEffect(() => {
     setLoading(true);
-
     loadSubjectDetails().finally(() => setLoading(false));
-
   }, [id]);
 
-  /* ---------------- UI STATES ---------------- */
   if (loading) return <div className="loader">Loading...</div>;
   if (!subject) return <p className="muted">Subject not found</p>;
 
@@ -58,12 +53,10 @@ function SubjectDetails() {
           <h3>{trainers.length}</h3>
           <p>Assigned Trainers</p>
         </div>
-
         <div className="stat-card">
           <h3>{topics.length}</h3>
           <p>Total Topics</p>
         </div>
-
         <div className="stat-card">
           <h3>Active</h3>
           <p>Status</p>
@@ -77,34 +70,37 @@ function SubjectDetails() {
         {trainers.length === 0 ? (
           <p className="muted">No trainers assigned.</p>
         ) : (
-          <div className="trainer-grid">
+          <div className="trainer-modern-list">
             {trainers.map(trainer => (
-              <div className="trainer-card" key={trainer.empId}>
-                <div className="avatar">👤</div>
+              <div className="trainer-modern-card" key={trainer.empId}>
 
-                <div className="trainer-info">
+                <div className="trainer-avatar">
+                  {trainer.name?.charAt(0) || "T"}
+                </div>
+
+                <div className="trainer-details">
                   <h4>{trainer.name}</h4>
-                  <p>{trainer.email}</p>
-                  <p className="small muted">
-                    Experience: {trainer.experience} yrs
-                  </p>
-                  <span
-                    className={`exp ${
-                      trainer.experience >= 4 ? "senior" : "junior"
-                    }`}
-                  >
-                    {trainer.experience >= 4
-                      ? "Senior Trainer"
-                      : "Junior Trainer"}
-                  </span>
+                  <p className="trainer-email">{trainer.email}</p>
+
+                  <div className="trainer-meta">
+                    <span>Experience: {trainer.experience} yrs</span>
+                    <span
+                      className={`trainer-badge ${
+                        trainer.experience >= 4 ? "senior" : "junior"
+                      }`}
+                    >
+                      {trainer.experience >= 4 ? "Senior Trainer" : "Junior Trainer"}
+                    </span>
+                  </div>
                 </div>
 
                 <Link
                   to={`/trainer/${trainer.empId}`}
-                  className="view-btn"
+                  className="trainer-view-btn"
                 >
                   View
                 </Link>
+
               </div>
             ))}
           </div>

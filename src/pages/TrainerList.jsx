@@ -6,7 +6,7 @@ import {
   getTrainersBySubject,
   getSubjectsByTrainer,
 } from "../services/trainerService";
-
+import { useToast } from "../components/ToastProvider";
 import { FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import "../styles/TrainerList.css";
 
@@ -15,57 +15,112 @@ function TrainerList({ trainers, refreshTrainers }) {
   const [query, setQuery] = useState("");
   const [searchType, setSearchType] = useState("name");
 
-  // ✅ Sync filtered trainers with parent data
+  const toast = useToast();
+
+  /* ---------------- SAFE TOAST ---------------- */
+  const safeShow = (options = {}) => {
+    if (!toast || !toast.show) return;
+
+    toast.show({
+      type: options.type || "success", // 👈 fallback
+      title: options.title || "",
+      message: options.message || "",
+    });
+  };
+
+  /* ---------------- SYNC DATA ---------------- */
   useEffect(() => {
     setFilteredTrainers(trainers);
   }, [trainers]);
 
+  /* ---------------- SEARCH ---------------- */
   const handleSearch = async () => {
     if (!query.trim()) {
-      alert("Enter search value");
+      safeShow({
+        type: "warning",
+        title: "Search Required",
+        message: "Please enter a value to search.",
+      });
       return;
     }
 
-    // 🔍 Search by Name (local)
     if (searchType === "name") {
-      setFilteredTrainers(
-        trainers.filter((t) =>
-          t.name.toLowerCase().includes(query.toLowerCase())
-        )
+      const result = trainers.filter((t) =>
+        t.name.toLowerCase().includes(query.toLowerCase())
       );
+
+      setFilteredTrainers(result);
+
+      safeShow({
+        type: "success",
+        title: "Search Completed",
+        message: `${result.length} trainer(s) found by name.`,
+      });
+      return;
     }
 
-    // 🔍 Search by Emp ID (API)
     if (searchType === "id") {
       try {
         const res = await getTrainerById(query);
-        const t = res.data;
-        const s = await getSubjectsByTrainer(t.empId);
-        t.subjects = s.data || [];
-        setFilteredTrainers([t]);
+        const trainer = res.data;
+
+        const subjectsRes = await getSubjectsByTrainer(trainer.empId);
+        trainer.subjects = subjectsRes.data || [];
+
+        setFilteredTrainers([trainer]);
+
+        safeShow({
+          type: "success",
+          title: "Trainer Found",
+          message: "Trainer details loaded successfully.",
+        });
       } catch {
-        alert("Trainer not found");
+        setFilteredTrainers([]);
+
+        safeShow({
+          type: "error",
+          title: "Not Found",
+          message: "Trainer not found with this Emp ID.",
+        });
       }
+      return;
     }
 
-    // 🔍 Search by Subject (API + SAFE FALLBACK)
     if (searchType === "subject") {
+      const searchValue = query.toLowerCase();
+
+      const localFiltered = trainers.filter((t) =>
+        (t.subjects || []).some((s) =>
+          s.subjectName.toLowerCase().includes(searchValue)
+        )
+      );
+
+      if (localFiltered.length > 0) {
+        setFilteredTrainers(localFiltered);
+
+        safeShow({
+          type: "success",
+          title: "Search Completed",
+          message: `${localFiltered.length} trainer(s) found for this subject.`,
+        });
+        return;
+      }
+
       try {
         const res = await getTrainersBySubject(query);
-        let list = res.data || [];
+        const list = res.data || [];
 
-        // ✅ If backend returns empty → fallback to local subject-name search
         if (list.length === 0) {
-          const localFiltered = trainers.filter((t) =>
-            (t.subjects || []).some((s) =>
-              s.subjectName.toLowerCase().includes(query.toLowerCase())
-            )
-          );
-          setFilteredTrainers(localFiltered);
+          setFilteredTrainers([]);
+
+          safeShow({
+            type: "info",
+            title: "No Results",
+            message: "No trainers found for this subject.",
+          });
           return;
         }
 
-        // ✅ Attach subjects properly (existing behavior preserved)
         const updated = await Promise.all(
           list.map(async (t) => {
             const s = await getSubjectsByTrainer(t.empId);
@@ -75,41 +130,72 @@ function TrainerList({ trainers, refreshTrainers }) {
         );
 
         setFilteredTrainers(updated);
+
+        safeShow({
+          type: "success",
+          title: "Search Completed",
+          message: `${updated.length} trainer(s) found for this subject.`,
+        });
       } catch {
-        alert("No trainers found");
+        setFilteredTrainers([]);
+
+        safeShow({
+          type: "error",
+          title: "Search Failed",
+          message: "Unable to search trainers by subject.",
+        });
       }
     }
   };
 
+  /* ---------------- DELETE ---------------- */
   const handleDelete = (id) => {
     if (window.confirm("Delete this trainer?")) {
-      deleteTrainer(id).then(() => {
-        alert("Trainer deleted");
-        refreshTrainers();
-      });
+      deleteTrainer(id)
+        .then(() => {
+          safeShow({
+            type: "success",
+            title: "Trainer Deleted",
+            message: "The trainer has been deleted successfully.",
+          });
+          refreshTrainers();
+        })
+        .catch(() => {
+          safeShow({
+            type: "error",
+            title: "Delete Failed",
+            message: "Unable to delete the trainer.",
+          });
+        });
     }
   };
 
+  /* ---------------- RESET ---------------- */
   const handleReset = () => {
     setQuery("");
     setSearchType("name");
     setFilteredTrainers(trainers);
+
+    safeShow({
+      type: "info", // 👈 now SAFE
+      title: "Reset",
+      message: "Search filters have been reset.",
+    });
   };
 
   return (
     <div className="trainer-page">
-      {/* Header */}
       <div className="trainer-header">
         <div>
           <h2>Trainer Management</h2>
           <p>{filteredTrainers.length} Trainers</p>
         </div>
+
         <Link to="/add-trainer" className="add-btn">
           <FaPlus /> Add New Trainer
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="trainer-filters">
         <select
           value={searchType}
@@ -133,7 +219,6 @@ function TrainerList({ trainers, refreshTrainers }) {
         </button>
       </div>
 
-      {/* Table */}
       <div className="trainer-table-wrapper">
         <table className="trainer-table">
           <thead>
@@ -164,9 +249,7 @@ function TrainerList({ trainers, refreshTrainers }) {
                   <td>{t.email}</td>
                   <td>{t.experience} yrs</td>
                   <td>
-                    {(t.subjects || [])
-                      .map((s) => s.subjectName)
-                      .join(", ")}
+                    {(t.subjects || []).map((s) => s.subjectName).join(", ")}
                   </td>
                   <td>
                     <Link

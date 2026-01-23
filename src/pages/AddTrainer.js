@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { addTrainer } from "../services/trainerService";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/ToastProvider";
 
 function AddTrainer({ subjects, refreshTrainers }) {
   const navigate = useNavigate();
+  const { show } = useToast();
+
   const [selectedSubjects, setSelectedSubjects] = useState([]);
 
   const [trainer, setTrainer] = useState({
@@ -12,7 +15,7 @@ function AddTrainer({ subjects, refreshTrainers }) {
     experience: "",
     address: "",
     format: "",
-    mobileNumber: ""
+    mobileNumber: "",
   });
 
   const handleChange = (e) => {
@@ -20,9 +23,9 @@ function AddTrainer({ subjects, refreshTrainers }) {
   };
 
   const handleSubjectToggle = (subjectId) => {
-    setSelectedSubjects(prev =>
+    setSelectedSubjects((prev) =>
       prev.includes(subjectId)
-        ? prev.filter(id => id !== subjectId)
+        ? prev.filter((id) => id !== subjectId)
         : [...prev, subjectId]
     );
   };
@@ -30,34 +33,63 @@ function AddTrainer({ subjects, refreshTrainers }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation
+    /* ---------------- VALIDATION ---------------- */
     if (!trainer.email.includes("@")) {
-      alert("Invalid Email");
-      return;
-    }
-    if (!trainer.name.trim()) {
-      alert("Please enter trainer name");
-      return;
-    }
-    if (!trainer.mobileNumber.trim()) {
-      alert("Please enter mobile number");
-      return;
-    }
-    if (selectedSubjects.length === 0) {
-      alert("Please select at least one interested subject");
+      show({
+        type: "error",
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+      });
       return;
     }
 
-    // Add trainer with subjects in one request
+    if (!trainer.name.trim()) {
+      show({
+        type: "warning",
+        title: "Name Required",
+        message: "Please enter trainer name.",
+      });
+      return;
+    }
+
+    if (!trainer.mobileNumber.trim()) {
+      show({
+        type: "warning",
+        title: "Mobile Required",
+        message: "Please enter mobile number.",
+      });
+      return;
+    }
+
+    if (selectedSubjects.length === 0) {
+      show({
+        type: "info",
+        title: "Subjects Required",
+        message: "Please select at least one interested subject.",
+      });
+      return;
+    }
+
+    /* ---------------- ADD TRAINER ---------------- */
     addTrainer(trainer, selectedSubjects)
       .then(() => {
-        alert("Trainer added successfully with interested subjects ✅");
+        show({
+          type: "success",
+          title: "Trainer Added",
+          message: "Trainer added successfully with interested subjects.",
+        });
+
         refreshTrainers();
         navigate("/");
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error:", err);
-        alert("Error adding trainer ❌");
+
+        show({
+          type: "error",
+          title: "Add Failed",
+          message: "Error adding trainer. Please try again.",
+        });
       });
   };
 
@@ -143,27 +175,42 @@ function AddTrainer({ subjects, refreshTrainers }) {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Interested Subjects/Technologies *</label>
-          <div className="border p-3 rounded" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <label className="form-label">
+            Interested Subjects / Technologies *
+          </label>
+
+          <div
+            className="border p-3 rounded"
+            style={{ maxHeight: "300px", overflowY: "auto" }}
+          >
             {subjects.length === 0 ? (
-              <p className="text-muted">No subjects available. Please add subjects first.</p>
+              <p className="text-muted">
+                No subjects available. Please add subjects first.
+              </p>
             ) : (
-              subjects.map(subject => (
+              subjects.map((subject) => (
                 <div key={subject.subjectId} className="form-check">
                   <input
                     className="form-check-input"
                     type="checkbox"
                     id={`subject-${subject.subjectId}`}
                     checked={selectedSubjects.includes(subject.subjectId)}
-                    onChange={() => handleSubjectToggle(subject.subjectId)}
+                    onChange={() =>
+                      handleSubjectToggle(subject.subjectId)
+                    }
                   />
-                  <label className="form-check-label" htmlFor={`subject-${subject.subjectId}`}>
-                    <strong>{subject.subjectName}</strong> - {subject.description}
+                  <label
+                    className="form-check-label"
+                    htmlFor={`subject-${subject.subjectId}`}
+                  >
+                    <strong>{subject.subjectName}</strong> –{" "}
+                    {subject.description}
                   </label>
                 </div>
               ))
             )}
           </div>
+
           <small className="text-muted">
             Selected: {selectedSubjects.length} subject(s)
           </small>

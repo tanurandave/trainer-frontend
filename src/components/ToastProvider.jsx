@@ -10,7 +10,7 @@ export function ToastProvider({ children }) {
     setToasts((t) => t.filter((x) => x.id !== id));
   }, []);
 
-  const show = useCallback((opts) => {
+  const show = useCallback((opts = {}) => {
     const id = crypto.randomUUID();
     setToasts((t) => [...t, { id, ...opts }]);
     return id;
@@ -22,14 +22,12 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
 
-      {/* Toast Stack */}
       <div className="fixed right-4 top-4 z-[9999] flex w-full max-w-sm flex-col gap-3">
         {toasts.map((t) => (
           <Toast key={t.id} {...t} onClose={remove} />
         ))}
       </div>
 
-      {/* Animations */}
       <style>{`
         @keyframes slideIn {
           from { transform: translateX(120%); opacity: 0 }

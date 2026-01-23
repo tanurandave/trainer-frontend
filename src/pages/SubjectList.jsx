@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { deleteSubject } from "../services/subjectService";
 import { useData } from "../context/DataContext";
 import AddTopicModal from "../components/AddTopicModal";
+import { useToast } from "../components/ToastProvider";
 
 function SubjectList() {
   const { subjects, refreshSubjects } = useData();
@@ -13,7 +14,7 @@ function SubjectList() {
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [topicSubject, setTopicSubject] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const { show } = useToast();
   /* ---------------- SEARCH ---------------- */
 
   const handleSearchById = () => {
@@ -32,6 +33,12 @@ function SubjectList() {
 
     try {
       await deleteSubject(id);
+      show({
+        type: "success",
+          title: "Subject Deleted",
+          message: "Subject Deleted successfully.",
+      });
+      return;
     } catch (err) {
       console.error(err);
       alert("Delete failed");
