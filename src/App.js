@@ -1,20 +1,22 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "./context/ThemeContext";
-import { DataProvider, useData } from "./context/DataContext";
-import Footer from "./components/Footer";
-import LandingPage from "./pages/LandingPage";
-import AppLayout from "./components/AppLayout";
-import TrainerList from "./pages/TrainerList";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
+import { DataProvider, useData } from './context/DataContext';
+import { ToastProvider } from "./components/ToastProvider";
+import AppLayout from './components/AppLayout';
+import Footer from './components/Footer';
+import LandingPage from './pages/LandingPage';
+import TrainerList from './pages/TrainerList';
+import Preferences from "./pages/settings";
+import TrainerProfile from "./pages/TrainerProfile";
+import TopicManagement from "./pages/TopicManagement";
+import TopicsPage from "./pages/TopicsPage";
 import AddTrainer from "./pages/AddTrainer";
-
 import EditTrainer from "./pages/EditTrainer";
 import SubjectList from "./pages/SubjectList";
 import SubjectDetails from "./pages/SubjectDetails";
 import AddSubject from "./pages/AddSubject";
 import AssignTrainerSubject from "./pages/AssignTrainerSubject";
-import TrainerProfile from "./pages/TrainerProfile";
-import { ToastProvider } from "./components/ToastProvider";
-import Preferences from "./pages/settings";
 
 function AppContent() {
   const { subjects, trainers, refreshSubjects, refreshTrainers } = useData();
@@ -37,6 +39,8 @@ function AppContent() {
 
           <Route path="/add-subject" element={<AddSubject />} />
           <Route path="/settings" element={<Preferences />} />
+          <Route path="/manage-topics" element={<TopicManagement />} />
+          <Route path="/topics" element={<TopicsPage />} />
         </Route>
       </Routes>
       <Footer />

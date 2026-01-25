@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import AddTopicModal from "./../components/AddTopicModal";
+import AddTopicModal from "../components/AddTopicModal";
 import AssignTopicToTrainer from "../components/AssignTopicToTrainer";
 
 function AssignTrainerSubject({ trainers, subjects }) {
@@ -73,7 +73,7 @@ function AssignTrainerSubject({ trainers, subjects }) {
       </div>
 
       {/* Assignment Table */}
-      <div className="bg-white rounded-xl shadow">
+      <div className="bg-white rounded-xl shadow mb-8">
         <table className="w-full">
           <thead className="bg-blue-50">
             <tr>
@@ -113,6 +113,8 @@ function AssignTrainerSubject({ trainers, subjects }) {
         </table>
       </div>
 
+
+
       {selected && (
         <AddTopicModal
           subject={subjects.find(s => s.subjectId === selected.subjectId)?.subjectName}
@@ -126,3 +128,4 @@ function AssignTrainerSubject({ trainers, subjects }) {
 }
 
 export default AssignTrainerSubject;
+ 

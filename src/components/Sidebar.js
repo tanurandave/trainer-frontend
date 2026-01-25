@@ -56,6 +56,16 @@ function Sidebar() {
             <Link2 size={18} />
             Assign
           </NavLink>
+
+          <NavLink to="/topics" className={linkClass}>
+            <BookOpen size={18} />
+            Topics
+          </NavLink>
+
+          <NavLink to="/manage-topics" className={linkClass}>
+            <BookOpen size={18} />
+            Manage Topics
+          </NavLink>
         </nav>
 
         {/* SETTINGS */}

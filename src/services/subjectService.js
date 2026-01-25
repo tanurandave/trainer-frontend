@@ -19,3 +19,7 @@ export const deleteSubject = (id) => {
 export const getTopicsForSubject = (id) => {
   return api.get(`/subject/${id}/topics`);
 };
+
+export const getAssignedTopicsForTrainerAndSubject = (trainerId, subjectId) => {
+  return api.get(`/subject/trainer/${trainerId}/subject/${subjectId}/topics`);
+};

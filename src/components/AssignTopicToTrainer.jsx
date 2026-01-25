@@ -1,37 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import api from "../services/api";
 import { getTopicsForSubject } from "../services/subjectService";
+import { useToast } from "../components/ToastProvider";
 
 function AssignTopicToTrainer({ trainers, subjects }) {
   const [trainerId, setTrainerId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [topics, setTopics] = useState([]);
   const [assignedTopics, setAssignedTopics] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingTopics, setLoadingTopics] = useState(false);
+  const { show } = useToast();
 
-  // ✅ FETCH TOPICS WHEN SUBJECT CHANGES
-  useEffect(() => {
-    if (!subjectId) {
-      setTopics([]);
-      return;
-    }
-
-    setLoading(true);
-
-    getTopicsForSubject(subjectId)
-      .then(res => {
-        setTopics(res.data);
-      })
-      .catch(err => {
-        console.error("Failed to fetch topics", err);
-        setTopics([]);
-      })
-      .finally(() => setLoading(false));
-  }, [subjectId]);
-
-  // ✅ ASSIGN TOPIC TO TRAINER (CORRECT FLOW)
+  // ✅ ASSIGN TOPIC TO SUBJECT
   const assignTopic = async (topicId) => {
-  if (!trainerId || !subjectId) return;
+  if (!subjectId) return;
 
   try {
     // ✅ Assign topic to subject (CORRECT API)
@@ -58,6 +40,29 @@ const assignTrainerToSubject = async () => {
   });
 };
 
+const loadTopics = async () => {
+  if (!subjectId) {
+    alert("Please select a subject first.");
+    return;
+  }
+  setLoadingTopics(true);
+  try {
+    const res = await getTopicsForSubject(subjectId);
+    setTopics(res.data);
+    if (res.data.length === 0) {
+      show({
+        type: "info",
+        title: "No Topics Found",
+        message: "No topics are available for the selected subject.",
+      });
+    }
+  } catch (error) {
+    console.error("Failed to load topics", error);
+    alert("Failed to load topics");
+  } finally {
+    setLoadingTopics(false);
+  }
+};
 
   const isAssigned = (topicId) => assignedTopics.includes(topicId);
 
@@ -66,31 +71,17 @@ const assignTrainerToSubject = async () => {
 
       {/* HEADER */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-blue-700">
-          Assign Topic to Trainer
+        <h2 className="text-3xl font-bold text-blue-700 mb-2">
+          Topic Assignment
         </h2>
-        <p className="text-gray-500">
-          Select a trainer, subject, and assign topics
+        <p className="text-gray-600 text-lg">
+          Select a subject and load topics
         </p>
       </div>
 
       {/* SELECTION CARD */}
       <div className="bg-white shadow rounded-xl p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-          {/* TRAINER */}
-          <select
-            className="border rounded p-2 focus:ring-2 focus:ring-blue-500"
-            value={trainerId}
-            onChange={e => setTrainerId(e.target.value)}
-          >
-            <option value="">Select Trainer</option>
-            {trainers.map(t => (
-              <option key={t.empId} value={t.empId}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
           {/* SUBJECT */}
           <select
@@ -111,11 +102,19 @@ const assignTrainerToSubject = async () => {
 
           {/* STATUS */}
           <div className="flex items-center justify-center bg-blue-50 rounded font-medium text-blue-600">
-            {trainerId && subjectId
-              ? "Ready to assign topics"
-              : "Select trainer & subject"}
+            {subjectId
+              ? "Ready to load topics"
+              : "Select subject"}
           </div>
         </div>
+
+        <button
+          onClick={loadTopics}
+          disabled={loadingTopics}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+        >
+          {loadingTopics ? "Loading..." : "Load Topics"}
+        </button>
       </div>
 
       {/* TOPICS LIST */}
@@ -124,9 +123,7 @@ const assignTrainerToSubject = async () => {
           Available Topics
         </h3>
 
-        {loading ? (
-          <p className="text-gray-400">Loading topics...</p>
-        ) : topics.length === 0 ? (
+        {topics.length === 0 ? (
           <p className="text-gray-400">No topics found for this subject</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">

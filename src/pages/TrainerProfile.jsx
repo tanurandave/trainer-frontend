@@ -6,10 +6,13 @@ import {
   getSubjectsByTrainer,
   deleteTrainer
 } from "../services/trainerService";
+import { getTopicsForSubject, getAssignedTopicsForTrainerAndSubject } from "../services/subjectService";
+import { useToast } from "../components/ToastProvider";
 
 function TrainerProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [trainer, setTrainer] = useState(null);
   const [subjects, setSubjects] = useState([]);
@@ -18,6 +21,7 @@ function TrainerProfile() {
   const [showAssign, setShowAssign] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState("");
   const [activeSubject, setActiveSubject] = useState(null);
+  const [topics, setTopics] = useState([]);
 
   /* ---------------- LOAD DATA ---------------- */
 
@@ -41,11 +45,24 @@ function TrainerProfile() {
         setAllSubjects(allSubjectsRes.data);
       })
       .catch(() => {
-        alert("Trainer not found");
+        toast.show({ type: "error", message: "Trainer not found" });
         navigate(-1);
       })
       .finally(() => setLoading(false));
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (activeSubject) {
+      getTopicsForSubject(activeSubject.subjectId).then(res => {
+        setTopics(res.data || []);
+      }).catch(err => {
+        console.error("Error loading topics", err);
+        setTopics([]);
+      });
+    } else {
+      setTopics([]);
+    }
+  }, [activeSubject]);
 
   /* ---------------- ACTIONS ---------------- */
 
@@ -61,8 +78,9 @@ function TrainerProfile() {
       loadAssignments();
       setShowAssign(false);
       setSelectedSubject("");
+      toast.show({ type: "success", message: "Subject assigned successfully" });
     } catch (err) {
-      alert(err.response?.data || "Assignment failed");
+      toast.show({ type: "error", message: err.response?.data || "Assignment failed" });
     }
   };
 
@@ -72,6 +90,8 @@ function TrainerProfile() {
     api.delete(`/trainer-subject/${empId}/${subjectId}`).then(() => {
       loadAssignments();
       setActiveSubject(null);
+      setTopics([]);
+      toast.show({ type: "success", message: "Subject removed successfully" });
     });
   };
 
@@ -182,6 +202,19 @@ function TrainerProfile() {
             <div className="space-y-3 text-sm">
               <p><b>Name:</b> {activeSubject.subjectName}</p>
               <p><b>Description:</b> {activeSubject.description || "N/A"}</p>
+
+              <div>
+                <p><b>Topics:</b></p>
+                {topics.length === 0 ? (
+                  <p className="text-gray-500">No topics assigned</p>
+                ) : (
+                  <ul className="list-disc list-inside">
+                    {topics.map(topic => (
+                      <li key={topic.id || topic.topicId}>{topic.topicName}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
               <button
                 onClick={() =>

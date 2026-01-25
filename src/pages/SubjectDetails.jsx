@@ -1,7 +1,7 @@
 // src/pages/SubjectDetails.jsx
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getSubjectById } from "../services/subjectService";
+import { getSubjectById, getTopicsForSubject } from "../services/subjectService";
 import "../styles/subject.css";
 
 function SubjectDetails() {
@@ -12,6 +12,7 @@ function SubjectDetails() {
   const [trainers, setTrainers] = useState([]);
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [topicsLoading, setTopicsLoading] = useState(false);
 
   /* ---------------- LOAD SUBJECT DETAILS ---------------- */
   const loadSubjectDetails = async () => {
@@ -21,10 +22,30 @@ function SubjectDetails() {
 
       setSubject(data.subject || data);
       setTrainers(data.trainers || []);
-      setTopics(data.topics || data.subject?.topics || []);
+
+      // Load topics separately using getTopicsForSubject
+      setTopicsLoading(true);
+      const topicsRes = await getTopicsForSubject(id);
+      const topicsData = topicsRes.data || [];
+      // Add default status to topics
+      const topicsWithStatus = topicsData.map(topic => ({ ...topic, status: topic.status || 'pending' }));
+      setTopics(topicsWithStatus);
+      setTopicsLoading(false);
     } catch (err) {
       console.error("Error loading subject details", err);
+      setTopicsLoading(false);
     }
+  };
+
+  /* ---------------- TOGGLE TOPIC STATUS ---------------- */
+  const toggleTopicStatus = (topicId) => {
+    setTopics(prevTopics =>
+      prevTopics.map(topic =>
+        topic.id === topicId || topic.topicId === topicId
+          ? { ...topic, status: topic.status === 'completed' ? 'pending' : 'completed' }
+          : topic
+      )
+    );
   };
 
   useEffect(() => {
@@ -107,28 +128,53 @@ function SubjectDetails() {
         )}
       </div>
 
-      {/* TOPICS */}
-      <div className="topic-section">
-        <h3>Topics Covered</h3>
+     {/* TOPICS */}
+<div className="topic-section">
+  <h3>Topics</h3>
 
-        {topics.length === 0 ? (
-          <p className="muted">No topics added yet.</p>
-        ) : (
-          <div className="topic-grid">
-            {topics.map(topic => (
-              <div
-                className="topic-card"
-                key={topic.id || topic.topicId}
+  {topicsLoading ? (
+    <div className="loader">Loading topics...</div>
+  ) : topics.length === 0 ? (
+    <p className="muted">No topics added yet.</p>
+  ) : (
+    <div className="topic-modern-list">
+      {topics.map(topic => {
+        const topicId = topic.id || topic.topicId;
+        const isCompleted = topic.status === "completed";
+
+        return (
+          <div
+            key={topicId}
+            className={`topic-modern-card ${isCompleted ? "completed" : "pending"}`}
+          >
+            {/* LEFT */}
+            <div className="topic-info">
+              <h4>{topic.topicName}</h4>
+              <p className="topic-desc">
+                {topic.description || "No description available"}
+              </p>
+            </div>
+
+            {/* RIGHT */}
+            <div className="topic-actions">
+              <span className={`topic-status-badge ${isCompleted ? "completed" : "pending"}`}>
+                {isCompleted ? "Completed" : "Pending"}
+              </span>
+
+              <button
+                className={`topic-toggle-btn ${isCompleted ? "completed" : ""}`}
+                onClick={() => toggleTopicStatus(topicId)}
               >
-                <h4>{topic.topicName}</h4>
-                <p className="muted">
-                  {topic.description || "No description available"}
-                </p>
-              </div>
-            ))}
+                {isCompleted ? "Mark Pending" : "Mark Completed"}
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        );
+      })}
+    </div>
+  )}
+</div>
+
 
     </div>
   );

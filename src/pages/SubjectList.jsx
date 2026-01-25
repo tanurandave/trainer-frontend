@@ -15,10 +15,30 @@ function SubjectList() {
   const [topicSubject, setTopicSubject] = useState(null);
   const [loading, setLoading] = useState(false);
   const { show } = useToast();
+
   /* ---------------- SEARCH ---------------- */
 
   const handleSearchById = () => {
-    if (!idSearch) return alert("Enter Subject ID");
+    if (!idSearch) {
+      show({
+        type: "error",
+        title: "Missing ID",
+        message: "Please enter Subject ID",
+      });
+      return;
+    }
+
+    const subjectExists = subjects.some(subject => subject.subjectId === parseInt(idSearch));
+
+    if (!subjectExists) {
+      show({
+        type: "error",
+        title: "Record not found",
+        message: "Subject with the entered ID does not exist",
+      });
+      return;
+    }
+
     navigate(`/subject/${idSearch}`);
   };
 
@@ -26,23 +46,29 @@ function SubjectList() {
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();
+
     if (!window.confirm("Delete this subject?")) return;
 
-    const oldSubjects = [...subjects];
-    refreshSubjects(subjects.filter(s => s.subjectId !== id));
-
     try {
-      await deleteSubject(id);
+      setLoading(true);
+
+      await deleteSubject(id);        // ✅ delete from backend
+      await refreshSubjects();        // ✅ reload from DB
+
       show({
         type: "success",
-          title: "Subject Deleted",
-          message: "Subject Deleted successfully.",
+        title: "Subject Deleted",
+        message: "Subject deleted successfully.",
       });
-      return;
     } catch (err) {
       console.error(err);
-      alert("Delete failed");
-      refreshSubjects(oldSubjects);
+      show({
+        type: "error",
+        title: "Delete Failed",
+        message: "Unable to delete subject. Try again.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,6 +138,7 @@ function SubjectList() {
                 <button
                   onClick={(e) => handleDelete(s.subjectId, e)}
                   className="text-sm bg-red-100 text-red-600 px-3 py-1 rounded"
+                  disabled={loading}
                 >
                   Delete
                 </button>
