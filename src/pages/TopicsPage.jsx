@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 
 import api from "../services/api";
 import { addTopic, getAllTopics, getTopicsForSubject } from "../services/topicService";
+import { useToast } from "../components/ToastProvider";
 
 function TopicsPage() {
+  const toast = useToast();
   const [subjects, setSubjects] = useState([]);
   const [trainers, setTrainers] = useState([]);
   const [topics, setTopics] = useState([]);
+  const [subjectMap, setSubjectMap] = useState({});
+  const [trainerMap, setTrainerMap] = useState({});
+  const [topicMap, setTopicMap] = useState({});
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedSubjectName, setSelectedSubjectName] = useState('');
   const [selectedTrainer, setSelectedTrainer] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
   const [assignments, setAssignments] = useState([]);
+  const [subjectTrainers, setSubjectTrainers] = useState([]);
 
   useEffect(() => {
     fetchSubjects();
@@ -23,6 +29,7 @@ function TopicsPage() {
     try {
       const response = await api.get('/subject');
       setSubjects(response.data);
+      setSubjectMap(response.data.reduce((map, s) => { map[s.subjectId] = s.subjectName; return map; }, {}));
     } catch (error) {
       console.error('Error fetching subjects:', error);
     }
@@ -32,6 +39,7 @@ function TopicsPage() {
     try {
       const response = await api.get('/trainer');
       setTrainers(response.data);
+      setTrainerMap(response.data.reduce((map, t) => { map[t.empId] = t.name; return map; }, {}));
     } catch (error) {
       console.error('Error fetching trainers:', error);
     }
@@ -41,15 +49,26 @@ function TopicsPage() {
     try {
       const response = await api.get('/topics');
       setTopics(response.data);
+      setTopicMap(response.data.reduce((map, t) => { map[t.topicId] = t.topicName; return map; }, {}));
     } catch (error) {
       console.error('Error fetching topics:', error);
     }
   };
 
-  const fetchTrainersForSubject = async (subjectId) => {
+  const fetchAssignments = async (subjectId) => {
+    try {
+      const response = await api.get(`/topics-subject-data/subject/${subjectId}`);
+      setAssignments(response.data);
+    } catch (error) {
+      console.error('Error fetching assignments for subject:', error);
+    }
+  };
+
+  const fetchSubjectTrainers = async (subjectId) => {
     try {
       const response = await api.get(`/trainer/subject/${subjectId}/topic`);
-      setAssignments(response.data);
+      const trainers = response.data.map(t => ({ empId: t.empId, name: t.name }));
+      setSubjectTrainers(trainers);
     } catch (error) {
       console.error('Error fetching trainers for subject:', error);
     }
@@ -72,17 +91,23 @@ function TopicsPage() {
     setSelectedTrainer('');
     setSelectedTopic('');
     if (subjectId) {
-      fetchTrainersForSubject(subjectId);
+      fetchAssignments(subjectId);
+      fetchSubjectTrainers(subjectId);
       fetchTopicsForSubject(subjectId);
     } else {
       setAssignments([]);
+      setSubjectTrainers([]);
       fetchTopics();
     }
   };
 
   const assignTopic = async () => {
     if (!selectedSubject || !selectedTrainer || !selectedTopic) {
-      alert('Please select subject, trainer, and topic');
+      toast.show({
+        type: 'warning',
+        title: 'Selection Required',
+        message: 'Please select subject, trainer, and topic'
+      });
       return;
     }
     try {
@@ -91,10 +116,40 @@ function TopicsPage() {
         trainerId: selectedTrainer,
         topicId: selectedTopic
       });
-      alert('Topic assigned successfully');
-      fetchTrainersForSubject(selectedSubject);
+      toast.show({
+        type: 'success',
+        title: 'Assignment Successful',
+        message: 'Topic assigned successfully'
+      });
+      fetchAssignments(selectedSubject);
     } catch (error) {
       console.error('Error assigning topic:', error);
+      toast.show({
+        type: 'error',
+        title: 'Assignment Failed',
+        message: 'Failed to assign topic. Please try again.'
+      });
+    }
+  };
+
+  const unassignTopic = async (subjectId, trainerId, topicId) => {
+    try {
+      await api.delete('/topics-subject-data/unassign', {
+        params: { subjectId, trainerId, topicId }
+      });
+      toast.show({
+        type: 'success',
+        title: 'Unassignment Successful',
+        message: 'Topic unassigned successfully'
+      });
+      fetchAssignments(selectedSubject);
+    } catch (error) {
+      console.error('Error unassigning topic:', error);
+      toast.show({
+        type: 'error',
+        title: 'Unassignment Failed',
+        message: 'Failed to unassign topic. Please try again.'
+      });
     }
   };
 
@@ -127,7 +182,7 @@ function TopicsPage() {
             className="w-full p-2 border rounded"
           >
             <option value="">Choose Trainer</option>
-            {assignments.map(trainer => (
+            {subjectTrainers.map(trainer => (
               <option key={trainer.empId} value={trainer.empId}>
                 {trainer.name}
               </option>
@@ -167,17 +222,22 @@ function TopicsPage() {
               <th className="border border-gray-300 p-2">Trainer Name</th>
               <th className="border border-gray-300 p-2">Subject</th>
               <th className="border border-gray-300 p-2">Assigned Topics</th>
+              <th className="border border-gray-300 p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {assignments.map(trainer => (
-              <tr key={trainer.empId}>
-                <td className="border border-gray-300 p-2">{trainer.name}</td>
-                <td className="border border-gray-300 p-2">{selectedSubjectName}</td>
+            {assignments.map(assignment => (
+              <tr key={assignment.id}>
+                <td className="border border-gray-300 p-2">{trainerMap[assignment.trainerId] || 'Unknown Trainer'}</td>
+                <td className="border border-gray-300 p-2">{subjectMap[assignment.subjectId] || 'Unknown Subject'}</td>
+                <td className="border border-gray-300 p-2">{topicMap[assignment.topicId] || 'Unknown Topic'}</td>
                 <td className="border border-gray-300 p-2">
-                  {trainer.topics && trainer.topics.length > 0
-                    ? trainer.topics.map(topic => topic.topicName).join(', ')
-                    : 'No topics assigned'}
+                  <button
+                    onClick={() => unassignTopic(assignment.subjectId, assignment.trainerId, assignment.topicId)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
