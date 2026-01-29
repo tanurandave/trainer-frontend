@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { getTopicsForSubject, addTopicToSubject, deleteTopicFromSubject } from '../services/topicService';
 
 function TopicManagement() {
+  const [searchParams] = useSearchParams();
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [topics, setTopics] = useState([]);
@@ -12,6 +14,11 @@ function TopicManagement() {
 
   useEffect(() => {
     fetchSubjects();
+    const subjectIdFromUrl = searchParams.get('subjectId');
+    if (subjectIdFromUrl) {
+      setSelectedSubject(subjectIdFromUrl);
+      fetchTopics(subjectIdFromUrl);
+    }
   }, []);
 
   const fetchSubjects = async () => {

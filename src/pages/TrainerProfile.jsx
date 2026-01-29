@@ -53,7 +53,7 @@ function TrainerProfile() {
 
   useEffect(() => {
     if (activeSubject) {
-      getTopicsForSubject(activeSubject.subjectId).then(res => {
+      getAssignedTopicsForTrainerAndSubject(trainer.empId, activeSubject.subjectId).then(res => {
         setTopics(res.data || []);
       }).catch(err => {
         console.error("Error loading topics", err);
@@ -62,7 +62,7 @@ function TrainerProfile() {
     } else {
       setTopics([]);
     }
-  }, [activeSubject]);
+  }, [activeSubject, trainer]);
 
   /* ---------------- ACTIONS ---------------- */
 

@@ -23,3 +23,7 @@ export const getTopicsForSubject = (id) => {
 export const getAssignedTopicsForTrainerAndSubject = (trainerId, subjectId) => {
   return api.get(`/subject/trainer/${trainerId}/subject/${subjectId}/topics`);
 };
+
+export const getAssignedTopicsWithTrainersForSubject = (subjectId) => {
+  return api.get(`/subject/${subjectId}/assigned-topics`);
+};

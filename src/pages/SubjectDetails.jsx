@@ -1,7 +1,7 @@
 // src/pages/SubjectDetails.jsx
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getSubjectById, getTopicsForSubject } from "../services/subjectService";
+import { getSubjectById, getTopicsForSubject, getAssignedTopicsWithTrainersForSubject } from "../services/subjectService";
 import "../styles/subject.css";
 
 function SubjectDetails() {
@@ -11,8 +11,11 @@ function SubjectDetails() {
   const [subject, setSubject] = useState(null);
   const [trainers, setTrainers] = useState([]);
   const [topics, setTopics] = useState([]);
+  const [assignedTopics, setAssignedTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [topicsLoading, setTopicsLoading] = useState(false);
+  const [assignedLoading, setAssignedLoading] = useState(false);
+  const [filter, setFilter] = useState('all'); // 'all', 'assigned', 'remaining'
 
   /* ---------------- LOAD SUBJECT DETAILS ---------------- */
   const loadSubjectDetails = async () => {
@@ -30,10 +33,22 @@ function SubjectDetails() {
       // Add default status to topics
       const topicsWithStatus = topicsData.map(topic => ({ ...topic, status: topic.status || 'pending' }));
       setTopics(topicsWithStatus);
+
       setTopicsLoading(false);
     } catch (err) {
       console.error("Error loading subject details", err);
       setTopicsLoading(false);
+    }
+  };
+
+  /* ---------------- LOAD ASSIGNED TOPICS ---------------- */
+  const loadAssignedTopics = async () => {
+    try {
+      const res = await getAssignedTopicsWithTrainersForSubject(id);
+      const data = res.data || [];
+      setAssignedTopics(data);
+    } catch (err) {
+      console.error("Error loading assigned topics", err);
     }
   };
 
@@ -132,45 +147,95 @@ function SubjectDetails() {
 <div className="topic-section">
   <h3>Topics</h3>
 
+  {/* FILTER BUTTONS */}
+  <div className="filter-buttons">
+    <button
+      className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+      onClick={() => setFilter('all')}
+    >
+      All Topics
+    </button>
+    <button
+      className={`filter-btn ${filter === 'assigned' ? 'active' : ''}`}
+      onClick={() => {
+        setFilter('assigned');
+        if (assignedTopics.length === 0) {
+          loadAssignedTopics();
+        }
+      }}
+    >
+      Assigned Topics
+    </button>
+    <button
+      className={`filter-btn ${filter === 'remaining' ? 'active' : ''}`}
+      onClick={() => setFilter('remaining')}
+    >
+      Remaining Topics
+    </button>
+  </div>
+
   {topicsLoading ? (
     <div className="loader">Loading topics...</div>
   ) : topics.length === 0 ? (
     <p className="muted">No topics added yet.</p>
   ) : (
     <div className="topic-modern-list">
-      {topics.map(topic => {
-        const topicId = topic.id || topic.topicId;
-        const isCompleted = topic.status === "completed";
+      {(() => {
+        let filteredTopics = [];
+        if (filter === 'all') {
+          filteredTopics = topics;
+        } else if (filter === 'assigned') {
+          filteredTopics = assignedTopics.map(at => ({
+            ...at,
+            topicId: at.topicId,
+            topicName: at.topicName,
+            description: at.description,
+            trainerName: at.trainerName
+          }));
+        } else if (filter === 'remaining') {
+          const assignedTopicIds = assignedTopics.map(at => at.topicId);
+          filteredTopics = topics.filter(topic => !assignedTopicIds.includes(topic.id || topic.topicId));
+        }
 
-        return (
-          <div
-            key={topicId}
-            className={`topic-modern-card ${isCompleted ? "completed" : "pending"}`}
-          >
-            {/* LEFT */}
-            <div className="topic-info">
-              <h4>{topic.topicName}</h4>
-              <p className="topic-desc">
-                {topic.description || "No description available"}
-              </p>
+        return filteredTopics.map(topic => {
+          const topicId = topic.id || topic.topicId;
+          const isCompleted = topic.status === "completed";
+
+          return (
+            <div
+              key={topicId}
+              className={`topic-modern-card ${isCompleted ? "completed" : "pending"}`}
+            >
+              {/* LEFT */}
+              <div className="topic-info">
+                <h4>{topic.topicName}</h4>
+                <p className="topic-desc">
+                  {topic.description || "No description available"}
+                </p>
+                {filter === 'assigned' && topic.trainerName && (
+                  <p className="trainer-name">Assigned to: {topic.trainerName}</p>
+                )}
+              </div>
+
+              {/* RIGHT */}
+              <div className="topic-actions">
+                <span className={`topic-status-badge ${isCompleted ? "completed" : "pending"}`}>
+                  {isCompleted ? "Completed" : "Pending"}
+                </span>
+
+                {filter === 'all' && (
+                  <button
+                    className={`topic-toggle-btn ${isCompleted ? "completed" : ""}`}
+                    onClick={() => toggleTopicStatus(topicId)}
+                  >
+                    {isCompleted ? "Mark Pending" : "Mark Completed"}
+                  </button>
+                )}
+              </div>
             </div>
-
-            {/* RIGHT */}
-            <div className="topic-actions">
-              <span className={`topic-status-badge ${isCompleted ? "completed" : "pending"}`}>
-                {isCompleted ? "Completed" : "Pending"}
-              </span>
-
-              <button
-                className={`topic-toggle-btn ${isCompleted ? "completed" : ""}`}
-                onClick={() => toggleTopicStatus(topicId)}
-              >
-                {isCompleted ? "Mark Pending" : "Mark Completed"}
-              </button>
-            </div>
-          </div>
-        );
-      })}
+          );
+        });
+      })()}
     </div>
   )}
 </div>

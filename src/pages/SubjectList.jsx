@@ -128,12 +128,13 @@ function SubjectList() {
               </span>
 
               <div className="flex gap-2">
-                <button
-                  onClick={(e) => openAddTopicModal(s, e)}
-                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded"
+                <Link
+                  to={`/manage-topics?subjectId=${s.subjectId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded inline-block"
                 >
                   + Topics
-                </button>
+                </Link>
 
                 <button
                   onClick={(e) => handleDelete(s.subjectId, e)}
