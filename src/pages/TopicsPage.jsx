@@ -198,7 +198,7 @@ function TopicsPage() {
             className="w-full p-2 border rounded"
           >
             <option value="">Choose Topic</option>
-            {topics.map(topic => (
+            {topics.filter(topic => !assignments.some(assignment => assignment.topicId === topic.topicId)).map(topic => (
               <option key={topic.topicId} value={topic.topicId}>
                 {topic.topicName}
               </option>
