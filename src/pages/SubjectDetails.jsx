@@ -43,12 +43,16 @@ function SubjectDetails() {
 
   /* ---------------- LOAD ASSIGNED TOPICS ---------------- */
   const loadAssignedTopics = async () => {
+    if (assignedLoading) return; // Prevent multiple calls
+    setAssignedLoading(true);
     try {
       const res = await getAssignedTopicsWithTrainersForSubject(id);
       const data = res.data || [];
       setAssignedTopics(data);
     } catch (err) {
       console.error("Error loading assigned topics", err);
+    } finally {
+      setAssignedLoading(false);
     }
   };
 
@@ -168,7 +172,12 @@ function SubjectDetails() {
     </button>
     <button
       className={`filter-btn ${filter === 'remaining' ? 'active' : ''}`}
-      onClick={() => setFilter('remaining')}
+      onClick={() => {
+        setFilter('remaining');
+        if (assignedTopics.length === 0) {
+          loadAssignedTopics();
+        }
+      }}
     >
       Remaining Topics
     </button>
@@ -183,8 +192,20 @@ function SubjectDetails() {
       {(() => {
         let filteredTopics = [];
         if (filter === 'all') {
-          filteredTopics = topics;
+          // Show all topics, including assigned and remaining, with trainer name for assigned ones
+          filteredTopics = topics.map(topic => {
+            const assignedTopic = assignedTopics.find(at => at.topicId === (topic.id || topic.topicId));
+            return {
+              ...topic,
+              trainerName: assignedTopic ? assignedTopic.trainerName : null
+            };
+          });
+        } else if (filter === 'remaining') {
+          // Show remaining (unassigned) topics
+          const assignedTopicIds = assignedTopics.map(at => at.topicId);
+          filteredTopics = topics.filter(topic => !assignedTopicIds.includes(topic.id || topic.topicId));
         } else if (filter === 'assigned') {
+          // Show assigned topics
           filteredTopics = assignedTopics.map(at => ({
             ...at,
             topicId: at.topicId,
@@ -192,9 +213,6 @@ function SubjectDetails() {
             description: at.description,
             trainerName: at.trainerName
           }));
-        } else if (filter === 'remaining') {
-          const assignedTopicIds = assignedTopics.map(at => at.topicId);
-          filteredTopics = topics.filter(topic => !assignedTopicIds.includes(topic.id || topic.topicId));
         }
 
         return filteredTopics.map(topic => {
@@ -212,24 +230,26 @@ function SubjectDetails() {
                 <p className="topic-desc">
                   {topic.description || "No description available"}
                 </p>
-                {filter === 'assigned' && topic.trainerName && (
+                {topic.trainerName && (
                   <p className="trainer-name">Assigned to: {topic.trainerName}</p>
                 )}
               </div>
 
               {/* RIGHT */}
               <div className="topic-actions">
-                <span className={`topic-status-badge ${isCompleted ? "completed" : "pending"}`}>
-                  {isCompleted ? "Completed" : "Pending"}
-                </span>
+                {(filter === 'all' || filter === 'remaining') && (
+                  <>
+                    <span className={`topic-status-badge ${isCompleted ? "completed" : "pending"}`}>
+                      {isCompleted ? "Completed" : "Pending"}
+                    </span>
 
-                {filter === 'all' && (
-                  <button
-                    className={`topic-toggle-btn ${isCompleted ? "completed" : ""}`}
-                    onClick={() => toggleTopicStatus(topicId)}
-                  >
-                    {isCompleted ? "Mark Pending" : "Mark Completed"}
-                  </button>
+                    <button
+                      className={`topic-toggle-btn ${isCompleted ? "completed" : ""}`}
+                      onClick={() => toggleTopicStatus(topicId)}
+                    >
+                      {isCompleted ? "Mark Pending" : "Mark Completed"}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
