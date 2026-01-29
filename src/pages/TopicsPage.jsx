@@ -8,6 +8,7 @@ function TopicsPage() {
   const [trainers, setTrainers] = useState([]);
   const [topics, setTopics] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSubjectName, setSelectedSubjectName] = useState('');
   const [selectedTrainer, setSelectedTrainer] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
   const [assignments, setAssignments] = useState([]);
@@ -65,7 +66,10 @@ function TopicsPage() {
 
   const handleSubjectChange = (e) => {
     const subjectId = e.target.value;
+    const subject = subjects.find(s => s.subjectId === subjectId);
     setSelectedSubject(subjectId);
+    setSelectedSubjectName(subject ? subject.subjectName : '');
+    setSelectedTrainer('');
     setSelectedTopic('');
     if (subjectId) {
       fetchTrainersForSubject(subjectId);
@@ -82,12 +86,11 @@ function TopicsPage() {
       return;
     }
     try {
-      // Assuming there's an API to assign topic to trainer for subject
-      // await api.post('/topics-subject-data/assign', {
-      //   subjectId: selectedSubject,
-      //   trainerId: selectedTrainer,
-      //   topicId: selectedTopic
-      // });
+      await api.post('/topics-subject-data/assign', {
+        subjectId: selectedSubject,
+        trainerId: selectedTrainer,
+        topicId: selectedTopic
+      });
       alert('Topic assigned successfully');
       fetchTrainersForSubject(selectedSubject);
     } catch (error) {
@@ -124,7 +127,7 @@ function TopicsPage() {
             className="w-full p-2 border rounded"
           >
             <option value="">Choose Trainer</option>
-            {trainers.map(trainer => (
+            {assignments.map(trainer => (
               <option key={trainer.empId} value={trainer.empId}>
                 {trainer.name}
               </option>
@@ -157,21 +160,25 @@ function TopicsPage() {
       </button>
 
       <div>
-        <h2 className="text-xl font-bold mb-4">Trainers for Selected Subject</h2>
+        <h2 className="text-xl font-bold mb-4">Assigned Topics</h2>
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-gray-300 p-2">Trainer Name</th>
-              <th className="border border-gray-300 p-2">Email</th>
-              <th className="border border-gray-300 p-2">Experience</th>
+              <th className="border border-gray-300 p-2">Subject</th>
+              <th className="border border-gray-300 p-2">Assigned Topics</th>
             </tr>
           </thead>
           <tbody>
             {assignments.map(trainer => (
               <tr key={trainer.empId}>
                 <td className="border border-gray-300 p-2">{trainer.name}</td>
-                <td className="border border-gray-300 p-2">{trainer.email}</td>
-                <td className="border border-gray-300 p-2">{trainer.experience}</td>
+                <td className="border border-gray-300 p-2">{selectedSubjectName}</td>
+                <td className="border border-gray-300 p-2">
+                  {trainer.topics && trainer.topics.length > 0
+                    ? trainer.topics.map(topic => topic.topicName).join(', ')
+                    : 'No topics assigned'}
+                </td>
               </tr>
             ))}
           </tbody>
