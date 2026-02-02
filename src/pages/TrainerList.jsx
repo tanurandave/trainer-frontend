@@ -8,7 +8,6 @@ import {
 } from "../services/trainerService";
 import { useToast } from "../components/ToastProvider";
 import { FaTrash, FaEye, FaPlus } from "react-icons/fa";
-import "../styles/TrainerList.css";
 
 function TrainerList({ trainers, refreshTrainers }) {
   const [filteredTrainers, setFilteredTrainers] = useState(trainers);
@@ -17,18 +16,15 @@ function TrainerList({ trainers, refreshTrainers }) {
 
   const toast = useToast();
 
-  /* ---------------- SAFE TOAST ---------------- */
   const safeShow = (options = {}) => {
     if (!toast || !toast.show) return;
-
     toast.show({
-      type: options.type || "success", // 👈 fallback
+      type: options.type || "success",
       title: options.title || "",
       message: options.message || "",
     });
   };
 
-  /* ---------------- SYNC DATA ---------------- */
   useEffect(() => {
     setFilteredTrainers(trainers);
   }, [trainers]);
@@ -48,14 +44,7 @@ function TrainerList({ trainers, refreshTrainers }) {
       const result = trainers.filter((t) =>
         t.name.toLowerCase().includes(query.toLowerCase())
       );
-
       setFilteredTrainers(result);
-
-      safeShow({
-        type: "success",
-        title: "Search Completed",
-        message: `${result.length} trainer(s) found by name.`,
-      });
       return;
     }
 
@@ -63,63 +52,30 @@ function TrainerList({ trainers, refreshTrainers }) {
       try {
         const res = await getTrainerById(query);
         const trainer = res.data;
-
         const subjectsRes = await getSubjectsByTrainer(trainer.empId);
         trainer.subjects = subjectsRes.data || [];
-
         setFilteredTrainers([trainer]);
-
-        safeShow({
-          type: "success",
-          title: "Trainer Found",
-          message: "Trainer details loaded successfully.",
-        });
       } catch {
         setFilteredTrainers([]);
-
-        safeShow({
-          type: "error",
-          title: "Not Found",
-          message: "Trainer not found with this Emp ID.",
-        });
       }
       return;
     }
 
     if (searchType === "subject") {
-      const searchValue = query.toLowerCase();
-
       const localFiltered = trainers.filter((t) =>
         (t.subjects || []).some((s) =>
-          s.subjectName.toLowerCase().includes(searchValue)
+          s.subjectName.toLowerCase().includes(query.toLowerCase())
         )
       );
 
       if (localFiltered.length > 0) {
         setFilteredTrainers(localFiltered);
-
-        safeShow({
-          type: "success",
-          title: "Search Completed",
-          message: `${localFiltered.length} trainer(s) found for this subject.`,
-        });
         return;
       }
 
       try {
         const res = await getTrainersBySubject(query);
         const list = res.data || [];
-
-        if (list.length === 0) {
-          setFilteredTrainers([]);
-
-          safeShow({
-            type: "info",
-            title: "No Results",
-            message: "No trainers found for this subject.",
-          });
-          return;
-        }
 
         const updated = await Promise.all(
           list.map(async (t) => {
@@ -130,20 +86,8 @@ function TrainerList({ trainers, refreshTrainers }) {
         );
 
         setFilteredTrainers(updated);
-
-        safeShow({
-          type: "success",
-          title: "Search Completed",
-          message: `${updated.length} trainer(s) found for this subject.`,
-        });
       } catch {
         setFilteredTrainers([]);
-
-        safeShow({
-          type: "error",
-          title: "Search Failed",
-          message: "Unable to search trainers by subject.",
-        });
       }
     }
   };
@@ -152,21 +96,14 @@ function TrainerList({ trainers, refreshTrainers }) {
   const handleDelete = (id) => {
     if (window.confirm("Delete this trainer?")) {
       deleteTrainer(id)
-        .then(() => {
-          safeShow({
-            type: "success",
-            title: "Trainer Deleted",
-            message: "The trainer has been deleted successfully.",
-          });
-          refreshTrainers();
-        })
-        .catch(() => {
+        .then(() => refreshTrainers())
+        .catch(() =>
           safeShow({
             type: "error",
             title: "Delete Failed",
-            message: "Unable to delete the trainer.",
-          });
-        });
+            message: "Unable to delete trainer.",
+          })
+        );
     }
   };
 
@@ -175,31 +112,31 @@ function TrainerList({ trainers, refreshTrainers }) {
     setQuery("");
     setSearchType("name");
     setFilteredTrainers(trainers);
-
-    safeShow({
-      type: "info", // 👈 now SAFE
-      title: "Reset",
-      message: "Search filters have been reset.",
-    });
   };
 
   return (
-    <div className="trainer-page">
-      <div className="trainer-header">
+    <div className="p-6 min-h-screen bg-slate-100">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h2>Trainer Management</h2>
-          <p>{filteredTrainers.length} Trainers</p>
+          <h2 className="text-2xl font-semibold">Trainer Management</h2>
+          <p className="text-gray-500">{filteredTrainers.length+1} Trainers</p>
         </div>
 
-        <Link to="/add-trainer" className="add-btn">
-          <FaPlus /> Add New Trainer
+        <Link
+          to="/add-trainer"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg w-fit"
+        >
+          <FaPlus /> Add Trainer
         </Link>
       </div>
 
-      <div className="trainer-filters">
+      {/* FILTERS */}
+      <div className="flex flex-col md:flex-row gap-3 mb-6">
         <select
           value={searchType}
           onChange={(e) => setSearchType(e.target.value)}
+          className="px-3 py-2 rounded-md border"
         >
           <option value="name">Name</option>
           <option value="id">Emp ID</option>
@@ -211,60 +148,79 @@ function TrainerList({ trainers, refreshTrainers }) {
           placeholder={`Search by ${searchType}`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          className="px-3 py-2 rounded-md border flex-1"
         />
 
-        <button onClick={handleSearch}>Search</button>
-        <button className="reset" onClick={handleReset}>
+        <button
+          onClick={handleSearch}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md"
+        >
+          Search
+        </button>
+
+        <button
+          onClick={handleReset}
+          className="bg-gray-400 text-white px-4 py-2 rounded-md"
+        >
           Reset
         </button>
       </div>
 
-      <div className="trainer-table-wrapper">
-        <table className="trainer-table">
-          <thead>
+      {/* TABLE */}
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+        <table className="w-full min-w-md table-auto border border-gray-200">
+          <thead className="bg-slate-100">
             <tr>
-              <th>Emp ID</th>
-              <th>Trainer</th>
-              <th>Email</th>
-              <th>Experience</th>
-              <th>Subjects</th>
-              <th>Actions</th>
+              <th className="p-3 text-left">Emp_ID</th>
+              <th className="p-3 text-left">Trainer</th>
+              <th className="p-3 text-left">Email</th>
+              <th className="p-3 text-left">Experience</th>
+              <th className="p-3 text-left">Subjects</th>
+              <th className="p-3 text-left">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredTrainers.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center">
+                <td colSpan="6" className="text-center p-6 text-gray-500">
                   No trainers found
                 </td>
               </tr>
             ) : (
               filteredTrainers.map((t) => (
-                <tr key={t.empId}>
-                  <td>{t.empId}</td>
-                  <td>
-                    <Link to={`/trainer/${t.empId}`}>{t.name}</Link>
-                  </td>
-                  <td>{t.email}</td>
-                  <td>{t.experience} yrs</td>
-                  <td>
-                    {(t.subjects || []).map((s) => s.subjectName).join(", ")}
-                  </td>
-                  <td>
+                <tr key={t.empId} className="border-t">
+                  <td className="p-3">{t.empId}</td>
+                  <td className="p-3 font-medium">
                     <Link
                       to={`/trainer/${t.empId}`}
-                      className="btn btn-sm btn-info me-2"
+                      className="no-underline text-black font-normal"
                     >
-                      <FaEye /> View
+                      {t.name}
                     </Link>
+                  </td>
 
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(t.empId)}
-                    >
-                      <FaTrash /> Delete
-                    </button>
+                  <td className="p-3">{t.email}</td>
+                  <td className="p-3">{t.experience} yrs</td>
+                  <td className="p-3 text-sm">
+                    {(t.subjects || []).map((s) => s.subjectName).join(", ")}
+                  </td>
+                  <td className="p-3">
+                    <div className="flex gap-3">
+                      <Link
+                        to={`/trainer/${t.empId}`}
+                        className="flex items-center gap-2 px-3 py-1 border border-indigo-500 text-indigo-600 rounded-md hover:bg-indigo-50 no-underline"
+                      >
+                        <FaEye /> View
+                      </Link>
+
+                      <button
+                        onClick={() => handleDelete(t.empId)}
+                        className="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                      >
+                        <FaTrash /> Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
