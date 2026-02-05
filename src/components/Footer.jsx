@@ -56,7 +56,7 @@ function Footer() {
           <div className="footer-bottom">
             <div className="footer-bottom-left">
               <p className="footer-copyright">
-                &copy; {currentYear} TrainerApp. All rights reserved.
+                &copy; {currentYear} TrainerHub. All rights reserved.
               </p>
             </div>
             <button 

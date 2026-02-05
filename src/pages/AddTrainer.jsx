@@ -78,7 +78,7 @@ function AddTrainer({ subjects, refreshTrainers }) {
         });
 
         refreshTrainers();
-        navigate("/");
+        navigate("/trainers");
       })
       .catch(() => {
         show({

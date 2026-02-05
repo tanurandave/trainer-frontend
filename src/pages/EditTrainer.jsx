@@ -48,7 +48,7 @@ function EditTrainer() {
           message: "Trainer updated successfully.",
         });
 
-        navigate("/");
+        navigate("/trainers");
       })
       .catch(() => {
         show({
