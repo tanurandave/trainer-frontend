@@ -125,7 +125,7 @@ function TrainerList({ trainers, refreshTrainers }) {
 
         <Link
           to="/add-trainer"
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg w-fit"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg w-fit no-underline"
         >
           <FaPlus /> Add Trainer
         </Link>

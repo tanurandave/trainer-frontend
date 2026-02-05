@@ -6,7 +6,9 @@ import {
   getSubjectsByTrainer,
   deleteTrainer
 } from "../services/trainerService";
-import { getTopicsForSubject, getAssignedTopicsForTrainerAndSubject } from "../services/subjectService";
+import {
+  getAssignedTopicsForTrainerAndSubject
+} from "../services/subjectService";
 import { useToast } from "../components/ToastProvider";
 
 function TrainerProfile() {
@@ -52,13 +54,13 @@ function TrainerProfile() {
   }, [id, navigate]);
 
   useEffect(() => {
-    if (activeSubject) {
-      getAssignedTopicsForTrainerAndSubject(trainer.empId, activeSubject.subjectId).then(res => {
-        setTopics(res.data || []);
-      }).catch(err => {
-        console.error("Error loading topics", err);
-        setTopics([]);
-      });
+    if (activeSubject && trainer) {
+      getAssignedTopicsForTrainerAndSubject(
+        trainer.empId,
+        activeSubject.subjectId
+      )
+        .then(res => setTopics(res.data || []))
+        .catch(() => setTopics([]));
     } else {
       setTopics([]);
     }
@@ -80,7 +82,10 @@ function TrainerProfile() {
       setSelectedSubject("");
       toast.show({ type: "success", message: "Subject assigned successfully" });
     } catch (err) {
-      toast.show({ type: "error", message: err.response?.data || "Assignment failed" });
+      toast.show({
+        type: "error",
+        message: err.response?.data || "Assignment failed"
+      });
     }
   };
 
@@ -101,9 +106,11 @@ function TrainerProfile() {
     navigate("/trainers");
   };
 
+  /* ---------------- UI ---------------- */
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-gray-500">
+      <div className="flex items-center justify-center h-[70vh] text-gray-500">
         Loading trainer profile...
       </div>
     );
@@ -112,32 +119,34 @@ function TrainerProfile() {
   if (!trainer) return null;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
       {/* HEADER */}
-      <div className="bg-white rounded-xl shadow p-6 flex justify-between gap-6">
+      <div className="bg-white/80 backdrop-blur rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-blue-700">{trainer.name}</h1>
-          <p className="text-gray-500">
+          <h1 className="text-3xl font-semibold text-gray-800">
+            {trainer.name}
+          </h1>
+          <p className="text-sm font-medium text-blue-600 mt-1">
             {trainer.experience >= 4 ? "Senior Trainer" : "Junior Trainer"}
           </p>
-          <div className="mt-2 text-sm text-gray-600">
+
+          <div className="mt-4 space-y-1 text-sm text-gray-600">
             <p>📧 {trainer.email}</p>
             <p>📞 {trainer.mobileNumber || "N/A"}</p>
           </div>
         </div>
 
-        {/* 🔹 SMALL BUTTONS */}
         <div className="flex gap-2 items-start">
           <Link
             to={`/edit/${trainer.empId}`}
-            className="bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"
+            className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm no-underline"
           >
             Edit
           </Link>
           <button
             onClick={removeTrainer}
-            className="border border-red-500 text-red-600 px-3 py-1 text-sm rounded hover:bg-red-50"
+            className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition"
           >
             Delete
           </button>
@@ -145,24 +154,24 @@ function TrainerProfile() {
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Stat label="Experience" value={`${trainer.experience} yrs`} />
         <Stat label="Subjects" value={subjects.length} />
         <Stat label="Format" value={trainer.format || "N/A"} />
       </div>
 
       {/* MAIN GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {/* SUBJECT LIST */}
-        <div className="md:col-span-2 bg-white rounded-xl shadow p-6">
-          <div className="flex justify-between mb-4">
-            <h3 className="font-semibold text-lg text-blue-600">
+        <div className="md:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">
               Assigned Subjects
             </h3>
             <button
               onClick={() => setShowAssign(true)}
-              className="bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"
+              className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
             >
               + Add Subject
             </button>
@@ -173,14 +182,18 @@ function TrainerProfile() {
               <div
                 key={s.subjectId}
                 onClick={() => setActiveSubject(s)}
-                className={`border rounded-lg p-4 cursor-pointer
-                  ${activeSubject?.subjectId === s.subjectId
-                    ? "border-blue-600 bg-blue-50"
-                    : "hover:bg-gray-50"}
+                className={`rounded-xl border p-4 cursor-pointer transition
+                  ${
+                    activeSubject?.subjectId === s.subjectId
+                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                      : "border-gray-200 hover:bg-gray-50"
+                  }
                 `}
               >
-                <h4 className="font-medium">{s.subjectName}</h4>
-                <p className="text-sm text-gray-500 line-clamp-2">
+                <h4 className="font-medium text-gray-800">
+                  {s.subjectName}
+                </h4>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                   {s.description}
                 </p>
               </div>
@@ -189,28 +202,30 @@ function TrainerProfile() {
         </div>
 
         {/* SUBJECT DETAILS */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h4 className="font-semibold mb-3 text-blue-600">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h4 className="font-semibold text-gray-800 mb-3">
             Subject Details
           </h4>
 
           {!activeSubject ? (
-            <p className="text-gray-400 text-sm">
-              Click on a subject to view details
+            <p className="text-sm text-gray-400">
+              Select a subject to view details
             </p>
           ) : (
-            <div className="space-y-3 text-sm">
-              <p><b>Name:</b> {activeSubject.subjectName}</p>
-              <p><b>Description:</b> {activeSubject.description || "N/A"}</p>
+            <div className="space-y-3 text-sm text-gray-700">
+              <p><span className="font-medium">Name:</span> {activeSubject.subjectName}</p>
+              <p><span className="font-medium">Description:</span> {activeSubject.description || "N/A"}</p>
 
               <div>
-                <p><b>Topics:</b></p>
+                <p className="font-medium mb-1">Topics</p>
                 {topics.length === 0 ? (
                   <p className="text-gray-500">No topics assigned</p>
                 ) : (
-                  <ul className="list-disc list-inside">
+                  <ul className="list-disc list-inside space-y-1">
                     {topics.map(topic => (
-                      <li key={topic.id || topic.topicId}>{topic.topicName}</li>
+                      <li key={topic.id || topic.topicId}>
+                        {topic.topicName}
+                      </li>
                     ))}
                   </ul>
                 )}
@@ -220,7 +235,7 @@ function TrainerProfile() {
                 onClick={() =>
                   removeAssignment(trainer.empId, activeSubject.subjectId)
                 }
-                className="px-3 py-1 text-sm border border-red-500 text-red-600 rounded hover:bg-red-50"
+                className="mt-2 px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition"
               >
                 Remove Subject
               </button>
@@ -229,19 +244,19 @@ function TrainerProfile() {
         </div>
       </div>
 
-      {/* 🔹 TODAY'S SESSIONS */}
-      <div className="bg-white rounded-xl shadow p-6 mt-6">
-        <h3 className="font-semibold text-lg text-blue-600 mb-2">
+      {/* TODAY SESSIONS */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
           Today’s Sessions
         </h3>
-        <p className="text-gray-400 text-sm">
+        <p className="text-sm text-gray-400">
           No sessions scheduled for today
         </p>
       </div>
 
-      {/* 🔹 REVIEWS */}
-      <div className="bg-white rounded-xl shadow p-6 mt-6">
-        <h3 className="font-semibold text-lg text-blue-600 mb-2">
+      {/* REVIEWS */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
           Reviews
         </h3>
         <div className="space-y-2 text-sm text-gray-600">
@@ -250,16 +265,16 @@ function TrainerProfile() {
         </div>
       </div>
 
-      {/* ASSIGN SUBJECT MODAL (UNCHANGED) */}
+      {/* ASSIGN SUBJECT MODAL */}
       {showAssign && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-lg">
             <h3 className="font-semibold mb-4">Assign Subject</h3>
 
             <select
               value={selectedSubject}
               onChange={e => setSelectedSubject(e.target.value)}
-              className="w-full border p-2 rounded mb-4"
+              className="w-full border border-gray-300 rounded-lg p-2 mb-4"
             >
               <option value="">Select subject</option>
               {allSubjects.map(s => (
@@ -272,13 +287,13 @@ function TrainerProfile() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowAssign(false)}
-                className="px-4 py-2 border rounded"
+                className="px-4 py-2 rounded-lg border hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={assignSubject}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 Assign
               </button>
@@ -293,9 +308,9 @@ function TrainerProfile() {
 /* ---------- STAT COMPONENT ---------- */
 
 const Stat = ({ label, value }) => (
-  <div className="bg-white rounded-xl shadow p-6 text-center">
-    <h3 className="text-2xl font-bold text-blue-700">{value}</h3>
-    <p className="text-gray-500 text-sm">{label}</p>
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center hover:shadow-md transition">
+    <h3 className="text-3xl font-semibold text-blue-700">{value}</h3>
+    <p className="text-sm text-gray-500 mt-1">{label}</p>
   </div>
 );
 

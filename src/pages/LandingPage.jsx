@@ -55,7 +55,7 @@ function LandingPage() {
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Trainers" value={stats.trainers} loading={loading} />
+        <StatCard title="Total Trainers" value={stats.trainers+1} loading={loading} />
         <StatCard title="Active Subjects" value={stats.subjects} loading={loading} />
         <StatCard title="Total Sessions" value={stats.sessions} loading={loading} />
         <StatCard title="Avg Rating" value={stats.rating} loading={loading} />

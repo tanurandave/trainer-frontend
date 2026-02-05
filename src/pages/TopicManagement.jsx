@@ -123,16 +123,16 @@ function TopicManagement() {
           </div>
 
           <div>
-            <h2 className="text-xl font-bold mb-4">Topics for Selected Subject</h2>
+            <h2 className="text-xl font-bold mb-4 ">Topics for Selected Subject</h2>
             {loading ? (
               <p>Loading...</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 ">
                 {topics.length === 0 ? (
                   <p>No topics found for this subject.</p>
                 ) : (
                   topics.map(topic => (
-                    <div key={topic.topicId} className="flex justify-between items-center p-4 border rounded">
+                    <div key={topic.topicId} className="flex justify-between items-center p-4 border rounded ">
                       <div>
                         <h3 className="font-semibold">{topic.topicName}</h3>
                         {topic.description && <p className="text-gray-600">{topic.description}</p>}

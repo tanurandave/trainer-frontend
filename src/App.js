@@ -4,10 +4,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import { DataProvider, useData } from './context/DataContext';
 import { ToastProvider } from "./components/ToastProvider";
 import AppLayout from './components/AppLayout';
-import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import TrainerList from './pages/TrainerList';
 import Preferences from "./pages/settings";
+import Notifications from "./pages/Notifications";
 import TrainerProfile from "./pages/TrainerProfile";
 import TopicManagement from "./pages/TopicManagement";
 import TopicsPage from "./pages/TopicsPage";
@@ -36,14 +36,14 @@ function AppContent() {
           <Route path="/subjects/:id" element={<SubjectDetails subjects={subjects} />} />
        
           <Route path="/subject/:id" element={<SubjectDetails />} />
-
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/add-subject" element={<AddSubject />} />
           <Route path="/settings" element={<Preferences />} />
           <Route path="/manage-topics" element={<TopicManagement />} />
           <Route path="/topics" element={<TopicsPage />} />
         </Route>
       </Routes>
-      <Footer />
+   
     </BrowserRouter>
     </ToastProvider>
   );

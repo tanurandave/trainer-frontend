@@ -60,69 +60,92 @@ function EditTrainer() {
   };
 
   return (
-    <div className="container mt-4">
-      <h3>Edit Trainer</h3>
+    <div className="max-w-3xl mx-auto">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        Edit Trainer
+      </h3>
 
-      <form className="card p-4" onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Name</label>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-lg shadow p-4 space-y-4"
+      >
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Name
+          </label>
           <input
-            className="form-control"
             name="name"
             value={trainer.name}
             onChange={handleChange}
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-200 outline-none"
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Email</label>
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
           <input
-            className="form-control"
-            name="email"
             type="email"
+            name="email"
             value={trainer.email}
             onChange={handleChange}
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 outline-none"
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Experience (years)</label>
+        {/* Experience */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Experience (years)
+          </label>
           <input
-            className="form-control"
-            name="experience"
             type="number"
+            name="experience"
             value={trainer.experience}
             onChange={handleChange}
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 outline-none"
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Mobile Number</label>
+        {/* Mobile */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Mobile Number
+          </label>
           <input
-            className="form-control"
             name="mobileNumber"
             value={trainer.mobileNumber}
             onChange={handleChange}
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 outline-none"
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Address</label>
+        {/* Address */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Address
+          </label>
           <input
-            className="form-control"
             name="address"
             value={trainer.address}
             onChange={handleChange}
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 outline-none"
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Training Format</label>
+        {/* Format */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Training Format
+          </label>
           <select
-            className="form-control"
             name="format"
             value={trainer.format}
             onChange={handleChange}
+            className="w-full border rounded-md px-3 py-2 bg-white focus:ring-2 focus:ring-yellow-500 outline-none"
           >
             <option value="">Select format</option>
             <option value="Online">Online</option>
@@ -131,7 +154,11 @@ function EditTrainer() {
           </select>
         </div>
 
-        <button className="btn btn-warning w-100">
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full bg-yellow-500 text-white py-2 rounded-md font-medium hover:bg-yellow-600 transition"
+        >
           Update Trainer
         </button>
       </form>
